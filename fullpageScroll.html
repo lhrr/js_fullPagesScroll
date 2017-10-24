@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8" />
+	<title>全页面滚动</title>
+	<style>
+		html,body{height: 100%;}
+		body{margin:0;padding: 0;overflow: hidden;}
+		div{height: 100%;position: relative;}
+		h3{width: 100%;height:40px;position: absolute;top: 0;bottom: 0;left: 0;right: 0;margin: auto;text-align: center;color: #fff;font-size: 30px;font-weight: bold;font-family: "Microsoft Yahei";letter-spacing: 8px;}
+		p{position: absolute; top: 30%;color: #fff;left: 50%;margin-left: -98px;font-size: 18px;font-weight: bold;}
+	</style>
+</head>
+<body>
+	<div style="background: #598f24"><p>原生js实现全页面滚动</p><h3>这里是页面1</h3></div>
+	<div style="background: #d55f5f"><h3>这里是页面2</h3></div>
+	<div style="background: #5f8dd5"><h3>这里是页面3</h3></div>
+	<div style="background: #ea9518"><h3>这里是页面4</h3></div>
+	<div style="background: #5f68a1"><h3>这里是页面5</h3></div>
+
+	<script type="text/javascript">
+		window.onload = function(){
+
+			var body = document.body,
+				html = document.documentElement,
+				height = document.body.offsetHeight,
+				timer;
+
+			//定义一个函数来获得scrollTop的值和设置该值来实现滚动
+			function scrollTop(val){
+				//如果没有传入值则获取到当前的scrollTop值
+				if(val == null){
+					return Math.max(body.scrollTop,html.scrollTop);
+				}else{
+					body.scrollTop = html.scrollTop = val;
+				}
+			}
+
+			//获得当前页数的索引值
+			var page = scrollTop()/height | 0;
+
+			// 滚轮事件
+			function addEvent(el,wheel,fn){
+				if(window.addEventListener){
+					el.addEventListener(wheel,fn,false)
+				}else{
+					el.attachEvent(wheel,fn,false)
+				}
+			}
+			function onwheel(e){
+
+				e = window.event || e;
+				e.preventDefault();
+				clearTimeout(timer);
+
+				timer = setTimeout(function(){
+
+					var delta = e.wheelDelta / 120 || -e.deltaY / 3;
+					page -= delta;                                     // 每次滚动页数索引变化
+					var max = (body.scrollHeight / height | 0) - 1;    //最大滚动页数索引
+					if(page < 0){
+						return page = 0;
+					}else if(page > max){
+						return page = max;
+					}
+					moving();
+				},150)
+			}
+			//调用滚轮事件,兼容不同浏览器的滚轮事件
+			addEvent(body,'wheel',onwheel);
+			addEvent(body,'mousewheel',onwheel);
+
+			// 滚动函数
+			function moving(){
+
+				var length = page*height;               //滚动时获得应该滚动到得值
+				var dis = scrollTop() - length;         //滚动时获得目前scrollTop和目标位置的差值
+
+				(function slide(){
+
+					dis = dis / 1.2 | 0;                //每次滚动后距离目标位置的差值
+					scrollTop(length + dis);            //设置滚动一次后的scrollTop值实现滚动
+					//如果dis不为零则继续滚动，直到dis为零，即完全滚动了一页
+					if(dis){
+						timer = setTimeout(slide,17);   
+					}
+				})()
+			}
+
+			//窗口大小改变事件，改变窗口大小时自动轮动防止同时出现两页
+			if(window.addEventListener){
+				window.addEventListener('resize',hResize,false)
+			}else{
+				window.attachEvent('resize',hResize,false)
+			}
+			function hResize(){
+				height = body.offsetHeight;
+				moving();
+			}
+			hResize();
+					
+		}
+	</script>
+</body>
+</html>
